@@ -45,7 +45,7 @@ To analyze the distribution of outages over the regions in the `'CLIMATE.REGION'
 <iframe
     src="assets/regions-dist.html"
     width="800"
-    height="600"
+    height="500"
     frameborder="0"
 ></iframe>
 
@@ -57,7 +57,7 @@ To see if some outage causes tend to correlate with longer outage durations, I c
 <iframe
     src="assets/duration-dist.html"
     width="800"
-    height="600"
+    height="500"
     frameborder="0"
 ></iframe>
 
@@ -91,12 +91,12 @@ Is `'CUSTOMERS.AFFECTED'` MAR dependent on `'CAUSE.CATEGORY'`?
 - Null hypothesis: The distribution of `'CAUSE.CATEGORY'` is the same when `'CUSTOMERS.AFFECTED'` is or is not missing
 - Alternate hypothesis: The distribution of `'CAUSE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is missing is different from the distribution when `'CUSTOMERS.AFFECTED'` is not missing.
 
-As a result, I got a p-value of $0.0$, so I rejected the null hypothesis at a significance level of $p<0.05$. This allows me to conclude that the missingness in `'CUSTOMERS.AFFECTED'` is likely MAR dependent on `'CAUSE.CATEGORY'`. In addition, before shuffling my dataset, I plotted the distribution of cause categories for the two groups (missing and not missing):
+As a result, I got a p-value of 0.0, so I rejected the null hypothesis at a significance level of p < 0.05. This allows me to conclude that the missingness in `'CUSTOMERS.AFFECTED'` is likely MAR dependent on `'CAUSE.CATEGORY'`. In addition, before shuffling my dataset, I plotted the distribution of cause categories for the two groups (missing and not missing):
 
 <iframe
     src="assets/missing-dist.html"
     width="800"
-    height="600"
+    height="500"
     frameborder="0"
 ></iframe>
 
@@ -110,11 +110,11 @@ Is `'CUSTOMERS.AFFECTED'` MAR dependent on `'CLIMATE.CATEGORY'`?
 - Null hypothesis: The distribution of `'CLIMATE.CATEGORY'` is the same when `'CUSTOMERS.AFFECTED'` is or is not missing
 - Alternate hypthesis: The distributions of `'CLIMATE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is and isn't missing are different
 
-As a result, I got a p-value of $0.318$, so I failed to reject the null hypothesis at a significance level of $p<0.05$. This means that the missingness in `'CUSTOMERS.AFFECTED'` is most likely *not* MAR dependent on `'CLIMATE.CATEGORY'`. 
+As a result, I got a p-value of 0.318, so I failed to reject the null hypothesis at a significance level of p < 0.05. This means that the missingness in `'CUSTOMERS.AFFECTED'` is most likely *not* MAR dependent on `'CLIMATE.CATEGORY'`. 
 
 # Hypothesis Testing
 ## Permutation Test
-I performed a permutation test to answer the question, do outages that occured in the northeast and outages that occured elsewhere come from the same distribution of outage causes? My null hypothesis was, "the distribution of outage causes for outages that occured in the northeast is the same as those that occured elsewhere. The difference between the two observed samples is due to chance". My alternate hypothesis was, "the distribution of outage causes for the two regions are different". Since I was comparing two categorical distributions, I used TVD as a test statistic. As a result, I got a p-value of $0.0$, so I rejected the null hypothesis. This means that the distribution of causes for outages in the Northeast and outages elsewhere are likely not the same, which could imply that certain outage causes happen in one climate region more than the rest. I chose to perform this specific permutation test to observe regional characteristics associated with the distribution of outage causes.
+I performed a permutation test to answer the question, do outages that occured in the northeast and outages that occured elsewhere come from the same distribution of outage causes? My null hypothesis was, "the distribution of outage causes for outages that occured in the northeast is the same as those that occured elsewhere. The difference between the two observed samples is due to chance". My alternate hypothesis was, "the distribution of outage causes for the two regions are different". Since I was comparing two categorical distributions, I used TVD as a test statistic. As a result, I got a p-value of 0.0, so I rejected the null hypothesis. This means that the distribution of causes for outages in the Northeast and outages elsewhere are likely not the same, which could imply that certain outage causes happen in one climate region more than the rest. I chose to perform this specific permutation test to observe regional characteristics associated with the distribution of outage causes.
 
 # Framing a Prediction Problem
 ## Problem Identification
@@ -129,12 +129,12 @@ In my baseline model, I used a decision tree to predict the cause category for o
 
 Since `'CLIMATE.REGION'` is a nominal feature, I encoded it using one-hot encoding to create binary features for each region. 
 
-My baseline model had a training f1-score of $\sim 0.56$ and a testing f1-score of $\sim 0.53$, both of which aren't very high! This could be because I arbitrarily picked a tree depth of 3, which isn't necessarily the best value! Also, it's a pretty complicated prediction task for a relatively simple model, so it makes sense that it wouldn't do that well. 
+My baseline model had a training f1-score of approx. 0.56 and a testing f1-score of approx. 0.53, both of which aren't very high! This could be because I arbitrarily picked a tree depth of 3, which isn't necessarily the best value! Also, it's a pretty complicated prediction task for a relatively simple model, so it makes sense that it wouldn't do that well. 
 
 # Final Model
 For my final model, I used a random forest of decision trees. For features, I used the same features as my baseline model, but I transformed `'ANOMALY.LEVEL'` into quartiles and I transformed `'TOTAL.SALES'` into percentiles. These transformations into new features improved my model because the quantiles should have a closer correlation to the target category than the raw data. To improve my model further, I performed 5-fold cross-valuidation to find the best maximum depth for the decision trees in the random forest and the number of trees to put in the random forest. As a result of the 5-fold cross-validation, I got that the best `max_depth` value is 45, and the best number of trees is 95. 
 
-My final model had a training f1-score of $\sim 0.92$ and a testing f1-score of $\sim 0.67$, showing some improvement from the baseline model. My final model performed better than my baseline model because the random forest and optimized hyperparameters allowed the model to score better on the training data, causing an increase in score for the testing data.
+My final model had a training f1-score of approx. 0.92 and a testing f1-score of approx. 0.67, showing some improvement from the baseline model. My final model performed better than my baseline model because the random forest and optimized hyperparameters allowed the model to score better on the training data, causing an increase in score for the testing data.
 
 # Fairness Analysis
-
+Finally, I analyzed if my final model was fair for 'old' outages that occured before 2010, and 'new' outages that occured after 2010 by performing a permutation test where I shuffled the `'YEAR'` column in the input DataFrame for my model. In order to evaluate my model on each group, I used the f1-score. As a test statistic, I used the absolute different between f1-scores for old outages and new outages. My null hypothesis was, "My model is fair, its f1-scores for old outages and new outages are roughly the same", and my alternate hypothesis was, "My model is not fair, the difference in f1-scores between old and new outages is positive". As a result, I got a p-value of 1.0, so I failed to reject the null at a significance value of p < 0.05. Therefore, my model is likely to be fair for these two groups.
